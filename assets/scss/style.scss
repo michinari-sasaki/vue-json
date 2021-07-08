@@ -1,0 +1,133 @@
+@mixin sp {
+  @media screen and(max-width:480px) {
+    @content;
+  }
+}
+@mixin pc {
+  @media screen and(min-width:1023px) {
+    @content;
+  }
+}
+
+$black: #000;
+$gray: #aaa;
+
+body,
+html {
+  font-size: 62.5%;
+}
+
+#app {
+  width: 780px;
+  margin: 0 auto;
+  header {
+    padding: 2.4rem;
+    text-align: center;
+    h1 {
+      font-size: 3.2rem;
+      font-weight: bold;
+      span {
+        display: block;
+        font-size: 1.4rem;
+        font-weight: normal;
+      }
+    }
+  }
+}
+
+.main {
+  display: flex;
+  justify-content: space-between;
+}
+
+.interview {
+  &__menu {
+    margin-top: 3.2rem;
+    width: 16%;
+    button {
+      font-size: 1.2rem;
+      border: 1px solid $gray;
+      color: $gray;
+      padding: 2px 8px;
+      margin: 6px 6px 0 0;
+      border-radius: 5px;
+    }
+  }
+  &__litst {
+    width: 82%;
+    li {
+      display: flex;
+      justify-content: space-between;
+      border: 1px solid $black;
+      padding: 2.4rem;
+      &:not(:first-of-type) {
+        margin-top: 24px;
+      }
+    }
+    &__number {
+      text-align: right;
+      padding: 0 1.6rem;
+      span {
+        color: red;
+        font-size: 3.2rem;
+        padding: 0 0.8rem;
+      }
+    }
+    &__tmb {
+      width: 20%;
+    }
+    &__contents {
+      width: 75%;
+      font-size: 1.6rem;
+      &__title {
+        font-size: 1.8rem;
+        font-weight: bold;
+      }
+      &__name {
+        margin-top: 0.8rem;
+        font-size: 1.4rem;
+        span {
+          margin-right: 1.6rem;
+        }
+      }
+      &__tag {
+        button {
+          font-size: 1.2rem;
+          border: 1px solid $gray;
+          color: $gray;
+          padding: 2px 8px;
+          margin-right: 6px;
+          border-radius: 5px;
+        }
+      }
+      &__text {
+        margin-top: 1.6rem;
+      }
+    }
+  }
+  &__detail {
+    width: 82%;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    border: 1px solid $black;
+    padding: 2.4rem;
+    margin-top: 4.8rem;
+    button {
+      font-size: 1.2rem;
+      border: 1px solid $gray;
+      color: $gray;
+      padding: 2px 8px;
+      margin-right: 6px;
+      border-radius: 5px;
+    }
+  }
+}
+
+footer {
+  font-size: 1.6rem;
+  font-weight: normal;
+  margin-top: 2.6rem;
+  text-align: center;
+  padding: 24px;
+}

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>jsonテスト</title>
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <script src="https://unpkg.com/vue@next"></script>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>
+          漫画キャラのインタビュー
+          <span>仕様:CSVをJson化して表示、フロントはVue</span>
+        </h1>
+      </header>
+
+      <div class="main">
+        <div class="interview__menu">
+          <div>■チェック</div>
+          <template v-for="item,index in itemTags" :key="index">
+            <p>
+              <label :for="'tag_'+ index">{{item}}</label>
+              <input type="checkbox" :value="item" :id="'tag_'+ index" v-model="checkedTags" />
+            </p>
+          </template>
+          <div class="mt-10">
+            <button v-on:click="csv_sort_clear()">タグ選択解除</button>
+            <button v-on:click="pageActive =! pageActive">{{pageActive}}</button>
+          </div>
+        </div>
+
+        <div class="interview__litst" v-show="pageActive">
+          <p class="interview__litst__number">該当<span>{{itemList.length}}</span>件</p>
+          <ul>
+            <li v-for="item in itemList">
+              <div class="interview__litst__tmb">
+                <template v-if="item.img">
+                  <img :src="imgUrl+item.img" alt="" />
+                </template>
+                <template v-else>
+                  <img src="./assets/img/dammy.png" alt="" />
+                </template>
+              </div>
+              <div class="interview__litst__contents" v-on:click="more(item.id)">
+                <p class="interview__litst__contents__title">{{item.title}}</p>
+                <p class="interview__litst__contents__name"><span>{{item.id}}</span>{{item.name}}</p>
+                <p class="interview__litst__contents__tag">
+                  <template v-for="tag,index in item.tag" :key="index">
+                    <p>
+                      <label :for="'tagButton_'+ item.id + '_' + index">{{tag}}</label>
+                      <input type="checkbox" :value="tag" :id="'tagButton_'+ item.id + '_' + index" v-model="checkedTags" />
+                    </p>
+                  </template>
+                </p>
+                <p class="interview__litst__contents__text">{{item.text}}</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <!-- ページ詳細 -->
+        <div v-show="!pageActive" class="interview__detail">
+          <div class="interview__litst__tmb">
+            <template v-if="pageDetail.img">
+              <img :src="imgUrl+pageDetail.img" alt="" />
+            </template>
+            <template v-else>
+              <img src="./assets/img/dammy.png" alt="" />
+            </template>
+          </div>
+          <div class="interview__litst__contents" v-on:click="more(pageDetail.id)">
+            <p class="interview__litst__contents__title">{{pageDetail.title}}</p>
+            <p class="interview__litst__contents__name"><span>{{pageDetail.id}}</span>{{pageDetail.name}}</p>
+            <p class="interview__litst__contents__tag">
+              <template v-for="tag,index in pageDetail.tag" :key="index">
+                <p>
+                  <label :for="'tagButton_'+ pageDetail.id + '_' + index">{{tag}}</label>
+                  <input type="checkbox" :value="tag" :id="'tagButton_'+ pageDetail.id + '_' + index" v-model="checkedTags" />
+                </p>
+              </template>
+            </p>
+            <p class="interview__litst__contents__text">{{pageDetail.text}}</p>
+            <p class="interview__litst__contents__text">{{pageDetail.article}}</p>
+            <button v-on:click="csv_sort_clear()">一覧に戻る</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer>copy</footer>
+
+    <script>
+      Vue.createApp({
+        data: function () {
+          return {
+            pageActive: true,
+            pageDetail: [],
+            checkedTags: [],
+            csvHeader: [],
+            csvData: [],
+            csvSearch: [],
+            itemList: [],
+            itemOriginList: [],
+            itemTags: [],
+            imgUrl: "./assets/img/",
+          };
+        },
+        watch: {
+          checkedTags: function () {
+            if (this.checkedTags.length === 0) {
+              this.itemList = this.itemOriginList;
+            } else {
+              this.csv_sort();
+            }
+          },
+        },
+        methods: {
+          csv_data: function () {
+            const request = new XMLHttpRequest();
+            request.addEventListener("load", (event) => {
+              let response = event.target.responseText;
+              //データを改行で分割
+              response = response.split("\n");
+              //CSVの先頭行をkeyにするため一旦配列に格納
+              this.csvHeader = response[0].split(",");
+              //先頭行の最後の配列を指定して改行文字を削除
+              let lastNum = this.csvHeader.length - 1;
+              this.csvHeader[lastNum] = this.csvHeader[lastNum].replace("\r", "");
+              //CSV配列の先頭のメニュー行を削除
+              response.shift();
+              //分割した一行ずつのデータを更にカンマで分割（二次元配列）
+              for (let i = 0; i < response.length; i++) {
+                this.csvData[i] = response[i].split(",");
+              }
+              //タグのカラムを半角区切りをカンマに直して配列に変換する
+              for (let i = 0; i < this.csvData.length; i++) {
+                if (this.csvData[i][1]) {
+                  this.csvData[i][1] = this.csvData[i][1].split(" ");
+                }
+              }
+              //カンマで分割したデータをオブジェクト（連想配列）に変換
+              for (let i = 0; i < this.csvData.length; i++) {
+                this.itemOriginList.push({
+                  [this.csvHeader[0]]: i,
+                  [this.csvHeader[1]]: this.csvData[i][1],
+                  [this.csvHeader[2]]: this.csvData[i][2],
+                  [this.csvHeader[3]]: this.csvData[i][3],
+                  [this.csvHeader[4]]: this.csvData[i][4],
+                  [this.csvHeader[5]]: this.csvData[i][5],
+                  [this.csvHeader[6]]: this.csvData[i][6],
+                });
+              }
+              //タグ一覧の配列を生成
+              for (let i = 0; i < this.itemOriginList.length; i++) {
+                this.itemTags = this.itemTags.concat(this.itemOriginList[i].tag);
+              }
+              //重複削除
+              this.itemTags = this.itemTags.filter(function (x, i, self) {
+                return self.indexOf(x) === i;
+              });
+
+              console.log(this.itemTags);
+              this.itemList = this.itemOriginList;
+            });
+            request.open("GET", "./assets/data/interview-data.csv", true);
+            request.send();
+          },
+          csv_sort: function () {
+            this.csvSearch = [];
+            //特定のタグでソートする
+            for (let i = 0; i < this.itemOriginList.length; i++) {
+              //filterで配列同士の重複を検索してtrueなら表示させる
+              if ([...this.itemOriginList[i].tag, ...this.checkedTags].filter((item) => this.itemOriginList[i].tag.includes(item) && this.checkedTags.includes(item)).length > 0) {
+                this.csvSearch.push(this.itemOriginList[i].id);
+              }
+            }
+            let tmp = this.itemOriginList.filter((x) => this.csvSearch.includes(x.id));
+            this.itemList = tmp;
+          },
+          csv_sort_clear: function () {
+            this.pageActive = false;
+            this.checkedTags = [];
+            this.itemList = this.itemOriginList;
+          },
+          more: function (id) {
+            this.pageActive = !this.pageActive;
+            this.pageDetail = this.itemOriginList[id];
+          },
+        },
+        mounted: function () {
+          this.csv_data();
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
